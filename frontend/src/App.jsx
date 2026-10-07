@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Send, Sparkles, User, Bot } from "lucide-react";
 
 function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const generateThreadId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+  };
+
+  const threadId = useRef(generateThreadId()).current;
 
   async function generateText(text) {
     setLoading(true);
@@ -45,7 +51,7 @@ function App() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message: inputText }),
+      body: JSON.stringify({ message: inputText, threadId: threadId }),
     });
 
     if (!response.ok) {
@@ -110,8 +116,8 @@ function App() {
             </h2>
 
             <p className="mt-3 max-w-md text-sm leading-6 text-neutral-500">
-              Ask me anything. I can help you understand concepts, write code,
-              brainstorm ideas, or solve problems.
+              Ask me anything. I can help you understand concepts, brainstorm
+              ideas or solve problems.
             </p>
 
             <div className="mt-8 grid w-full max-w-lg grid-cols-1 gap-3 sm:grid-cols-2">
@@ -134,7 +140,7 @@ function App() {
         )}
 
         {/* Messages */}
-        <div className="space-y-6 pb-20">
+        <div className="space-y-6 pb-10">
           {messages.map((message, index) => {
             const isUser = message.role === "user";
 

@@ -4,10 +4,10 @@ import NodeCache from "node-cache";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-const myCache = new NodeCache();
+const myCache = new NodeCache({ stdTTL: 60 * 60 * 24 }); //standard time to leave -> 24 hours
 
-export async function generateText(userMessage) {
-  const messages = [
+export async function generateText(userMessage, threadID) {
+  const baseMessages = [
     {
       role: "system",
       content: `You are smart personal assistant, who answers questions asked by the user. You have the access to following tool : 
@@ -18,6 +18,8 @@ export async function generateText(userMessage) {
     //   content: "What is current weather of Gurugram?",
     // },
   ];
+
+  const messages = myCache.get(threadID) ?? baseMessages;
 
   //for user queries
   messages.push({
@@ -63,6 +65,7 @@ export async function generateText(userMessage) {
 
     const toolCalls = completion.choices[0].message.tool_calls;
     if (!toolCalls) {
+      myCache.set(threadID, messages);
       return completion.choices[0].message.content; //FINAL OUTPUT
       //   console.log(`Assistant : ${completion.choices[0].message.content}`);
       break;
